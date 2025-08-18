@@ -606,8 +606,8 @@ We welcome contributions! Here's how to get started:
 
 ```bash
 # Fork the repository and clone your fork
-git clone https://github.com/YOUR_USERNAME/financial-backend.git
-cd financial-backend
+git clone https://github.com/ChetanGiri1997/Financial-Management-System.git
+cd Financial-Management-System
 
 # Create a feature branch
 git checkout -b feature/your-feature-name
