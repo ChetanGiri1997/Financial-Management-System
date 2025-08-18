@@ -4,14 +4,27 @@ from fastapi.security import HTTPAuthorizationCredentials
 from app.models.user import UserCreate, UserLogin, Token, UserResponse
 from app.crud.user import create_user, get_user_by_email, get_user_by_id, get_user_by_username
 from app.core.security import verify_password, create_access_token, create_refresh_token, verify_token
-from app.core.auth import security
+from app.core.auth import security, get_current_user, UserInDB
 
 router = APIRouter()
 
 
+def require_admin_role(current_user: UserInDB = Depends(get_current_user)):
+    """Dependency to ensure current user has admin role."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Admin role required."
+        )
+    return current_user
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user: UserCreate):
-    """Register a new user."""
+async def register(
+    user: UserCreate, 
+    current_user: UserInDB = Depends(require_admin_role)
+):
+    """Register a new user. Only accessible by admin users."""
     # Check if username already exists
     existing_user = await get_user_by_username(user.username)
     if existing_user:
@@ -56,7 +69,8 @@ async def login(user_credentials: UserLogin):
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role
     }
 
 
@@ -94,5 +108,19 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(secu
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role  
     }
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(current_user: UserInDB = Depends(get_current_user)):
+    """Get current authenticated user information."""
+    return UserResponse(
+        _id=current_user.id,
+        name=current_user.name,
+        username=current_user.username,
+        email=current_user.email,
+        role=current_user.role,
+        created_at=current_user.created_at
+    )

@@ -1,0 +1,647 @@
+# Financial Management System - API Endpoints Documentation
+
+## Base URL
+```
+http://localhost:8000
+```
+
+## Authentication
+All endpoints except `/auth/register` and `/auth/login` require a Bearer token in the Authorization header:
+```
+Authorization: Bearer <your_access_token>
+```
+
+---
+
+## 🔐 Authentication Endpoints
+
+### 1. Register User
+- **Endpoint:** `POST /auth/register`
+- **Access:** Public
+- **Description:** Register a new user account
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "user"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "64a7b8c9d1e2f3a4b5c6d7e8",
+  "name": "John Doe",
+  "username": "johndoe", 
+  "email": "john@example.com",
+  "role": "user",
+  "created_at": "2023-12-01T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+- `name`: 2-100 characters
+- `username`: 3-50 characters, alphanumeric + underscore only
+- `email`: Valid email format
+- `password`: Minimum 6 characters
+- `role`: "admin", "accountant", or "user"
+
+**Error Responses:**
+```json
+// 400 - Username already taken
+{
+  "detail": "Username already taken"
+}
+
+// 400 - Email already registered  
+{
+  "detail": "Email already registered"
+}
+
+// 422 - Validation Error
+{
+  "detail": [
+    {
+      "loc": ["body", "username"],
+      "msg": "ensure this value has at least 3 characters",
+      "type": "value_error.any_str.min_length"
+    }
+  ]
+}
+```
+
+---
+
+### 2. Login
+- **Endpoint:** `POST /auth/login`
+- **Access:** Public
+- **Description:** Authenticate user and receive JWT tokens
+
+**Request Body:**
+```json
+{
+  "username": "johndoe",
+  "password": "password123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+**Error Response:**
+```json
+// 401 - Invalid credentials
+{
+  "detail": "Incorrect username or password"
+}
+```
+
+---
+
+### 3. Refresh Token
+- **Endpoint:** `POST /auth/refresh`
+- **Access:** Requires refresh token
+- **Description:** Get new access token using refresh token
+
+**Headers:**
+```
+Authorization: Bearer <your_refresh_token>
+```
+
+**Request Body:** None
+
+**Response (200 OK):**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+**Error Responses:**
+```json
+// 401 - Invalid token
+{
+  "detail": "Could not validate credentials"
+}
+
+// 401 - Wrong token type
+{
+  "detail": "Invalid token type"
+}
+```
+
+---
+
+## 👥 Users Endpoints (Admin Only)
+
+### 4. List All Users
+- **Endpoint:** `GET /users`
+- **Access:** Admin only
+- **Description:** Get paginated list of all users
+
+**Query Parameters:**
+- `skip`: Number of records to skip (default: 0)
+- `limit`: Number of records to return (default: 100, max: 100)
+
+**Example Request:**
+```
+GET /users?skip=0&limit=10
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "64a7b8c9d1e2f3a4b5c6d7e8",
+    "name": "John Doe",
+    "username": "johndoe",
+    "email": "john@example.com",
+    "role": "user",
+    "created_at": "2023-12-01T10:30:00.000Z"
+  },
+  {
+    "id": "64a7b8c9d1e2f3a4b5c6d7e9",
+    "name": "Jane Smith",
+    "username": "janesmith",
+    "email": "jane@example.com",
+    "role": "accountant",
+    "created_at": "2023-12-01T11:15:00.000Z"
+  }
+]
+```
+
+---
+
+### 5. Create User
+- **Endpoint:** `POST /users`
+- **Access:** Admin only
+- **Description:** Create a new user (same as register but admin-only)
+
+**Request Body:**
+```json
+{
+  "name": "Alice Johnson",
+  "username": "alicejohnson",
+  "email": "alice@example.com",
+  "password": "securepass123",
+  "role": "accountant"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "64a7b8c9d1e2f3a4b5c6d7ea",
+  "name": "Alice Johnson", 
+  "username": "alicejohnson",
+  "email": "alice@example.com",
+  "role": "accountant",
+  "created_at": "2023-12-01T12:00:00.000Z"
+}
+```
+
+---
+
+### 6. Update User
+- **Endpoint:** `PUT /users/{user_id}`
+- **Access:** Admin only
+- **Description:** Update an existing user
+
+**Path Parameters:**
+- `user_id`: MongoDB ObjectId of the user
+
+**Request Body (all fields optional):**
+```json
+{
+  "name": "John Updated",
+  "username": "johnupdated",
+  "email": "johnupdated@example.com",
+  "password": "newpassword123",
+  "role": "accountant"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "64a7b8c9d1e2f3a4b5c6d7e8",
+  "name": "John Updated",
+  "username": "johnupdated",
+  "email": "johnupdated@example.com", 
+  "role": "accountant",
+  "created_at": "2023-12-01T10:30:00.000Z"
+}
+```
+
+**Error Response:**
+```json
+// 404 - User not found
+{
+  "detail": "User not found"
+}
+```
+
+---
+
+### 7. Delete User
+- **Endpoint:** `DELETE /users/{user_id}`
+- **Access:** Admin only
+- **Description:** Delete a user
+
+**Path Parameters:**
+- `user_id`: MongoDB ObjectId of the user
+
+**Response (204 No Content):** Empty body
+
+**Error Response:**
+```json
+// 404 - User not found
+{
+  "detail": "User not found"
+}
+```
+
+---
+
+## 💰 Transaction Endpoints
+
+### 8. Get Transactions
+- **Endpoint:** `GET /transactions`
+- **Access:** All authenticated users (role-based filtering)
+- **Description:** Get transactions based on user role
+
+**Query Parameters:**
+- `skip`: Number of records to skip (default: 0)
+- `limit`: Number of records to return (default: 100, max: 100)
+
+**Access Rules:**
+- **Admin/Accountant:** See all transactions
+- **User:** See own deposits + all organizational expenses
+
+**Example Request:**
+```
+GET /transactions?skip=0&limit=20
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "64a7b8c9d1e2f3a4b5c6d7eb",
+    "type": "deposit",
+    "amount": 1500.00,
+    "description": "Monthly salary deposit",
+    "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+    "user_name": "John Doe",
+    "date": "2023-12-01T09:00:00.000Z"
+  },
+  {
+    "id": "64a7b8c9d1e2f3a4b5c6d7ec",
+    "type": "expense", 
+    "amount": 250.00,
+    "description": "Office supplies purchase",
+    "user_id": "64a7b8c9d1e2f3a4b5c6d7e9",
+    "user_name": "Jane Smith",
+    "date": "2023-12-01T14:30:00.000Z"
+  }
+]
+```
+
+---
+
+### 9. Create Transaction
+- **Endpoint:** `POST /transactions`
+- **Access:** Accountant/Admin only
+- **Description:** Create a new transaction
+
+**Request Body:**
+```json
+{
+  "type": "deposit",
+  "amount": 2000.00,
+  "description": "Client payment received",
+  "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+  "date": "2023-12-01T16:00:00.000Z"
+}
+```
+
+**Field Rules:**
+- `type`: "deposit" or "expense"
+- `amount`: Must be greater than 0
+- `description`: 1-500 characters
+- `user_id`: Optional for deposits (defaults to current user), required for expenses
+- `date`: Optional (defaults to current time)
+
+**Response (201 Created):**
+```json
+{
+  "id": "64a7b8c9d1e2f3a4b5c6d7ed",
+  "type": "deposit",
+  "amount": 2000.00,
+  "description": "Client payment received",
+  "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+  "user_name": "John Doe",
+  "date": "2023-12-01T16:00:00.000Z"
+}
+```
+
+**Error Responses:**
+```json
+// 403 - Insufficient permissions
+{
+  "detail": "Not enough permissions"
+}
+
+// 400 - Invalid user_id
+{
+  "detail": "Invalid user_id"
+}
+
+// 422 - Validation error
+{
+  "detail": [
+    {
+      "loc": ["body", "amount"],
+      "msg": "ensure this value is greater than 0",
+      "type": "value_error.number.not_gt"
+    }
+  ]
+}
+```
+
+---
+
+### 10. Update Transaction
+- **Endpoint:** `PUT /transactions/{transaction_id}`
+- **Access:** Accountant/Admin only
+- **Description:** Update an existing transaction
+
+**Path Parameters:**
+- `transaction_id`: MongoDB ObjectId of the transaction
+
+**Request Body (all fields optional):**
+```json
+{
+  "type": "expense",
+  "amount": 300.00,
+  "description": "Updated expense description",
+  "date": "2023-12-01T17:00:00.000Z"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "64a7b8c9d1e2f3a4b5c6d7ed",
+  "type": "expense",
+  "amount": 300.00,
+  "description": "Updated expense description",
+  "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+  "user_name": "John Doe", 
+  "date": "2023-12-01T17:00:00.000Z"
+}
+```
+
+**Error Response:**
+```json
+// 404 - Transaction not found
+{
+  "detail": "Transaction not found"
+}
+```
+
+---
+
+### 11. Delete Transaction
+- **Endpoint:** `DELETE /transactions/{transaction_id}`
+- **Access:** Accountant/Admin only
+- **Description:** Delete a transaction
+
+**Path Parameters:**
+- `transaction_id`: MongoDB ObjectId of the transaction
+
+**Response (204 No Content):** Empty body
+
+**Error Response:**
+```json
+// 404 - Transaction not found
+{
+  "detail": "Transaction not found"
+}
+```
+
+---
+
+## 📊 Reports Endpoints
+
+### 12. Financial Summary
+- **Endpoint:** `GET /reports/summary`
+- **Access:** Accountant/Admin only
+- **Description:** Get comprehensive financial summary
+
+**Response (200 OK):**
+```json
+{
+  "total_deposits": 15750.00,
+  "total_expenses": 8920.50,
+  "balance": 6829.50,
+  "deposit_count": 12,
+  "expense_count": 25,
+  "monthly_breakdown": {
+    "2023-12": {
+      "deposits": 5250.00,
+      "expenses": 2100.00
+    },
+    "2023-11": {
+      "deposits": 4800.00,
+      "expenses": 3200.50
+    },
+    "2023-10": {
+      "deposits": 5700.00,
+      "expenses": 3620.00
+    }
+  }
+}
+```
+
+---
+
+### 13. User Deposit Report
+- **Endpoint:** `GET /reports/user/{user_id}`
+- **Access:** User (own report), Accountant/Admin (any user)
+- **Description:** Get user-specific deposit report
+
+**Path Parameters:**
+- `user_id`: MongoDB ObjectId of the user
+
+**Access Rules:**
+- Users can only access their own reports
+- Accountants/Admins can access any user's report
+
+**Response (200 OK):**
+```json
+{
+  "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+  "user_name": "John Doe",
+  "total_deposits": 4500.00,
+  "deposit_count": 3,
+  "transactions": [
+    {
+      "_id": "64a7b8c9d1e2f3a4b5c6d7eb",
+      "type": "deposit",
+      "amount": 1500.00,
+      "description": "Monthly salary deposit",
+      "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+      "date": "2023-12-01T09:00:00.000Z"
+    },
+    {
+      "_id": "64a7b8c9d1e2f3a4b5c6d7ee",
+      "type": "deposit", 
+      "amount": 1500.00,
+      "description": "November salary deposit",
+      "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+      "date": "2023-11-01T09:00:00.000Z"
+    },
+    {
+      "_id": "64a7b8c9d1e2f3a4b5c6d7ef",
+      "type": "deposit",
+      "amount": 1500.00, 
+      "description": "October salary deposit",
+      "user_id": "64a7b8c9d1e2f3a4b5c6d7e8",
+      "date": "2023-10-01T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Error Responses:**
+```json
+// 403 - Insufficient permissions (user accessing other's report)
+{
+  "detail": "Not enough permissions"
+}
+
+// 404 - User not found
+{
+  "detail": "User not found"
+}
+```
+
+---
+
+## 🏥 Health & Status Endpoints
+
+### 14. Root Endpoint
+- **Endpoint:** `GET /`
+- **Access:** Public
+- **Description:** Basic API information
+
+**Response (200 OK):**
+```json
+{
+  "message": "Financial Management System API",
+  "version": "1.0.0"
+}
+```
+
+---
+
+### 15. Health Check
+- **Endpoint:** `GET /health`
+- **Access:** Public  
+- **Description:** API health status
+
+**Response (200 OK):**
+```json
+{
+  "status": "healthy"
+}
+```
+
+---
+
+## 🔒 Role-Based Access Summary
+
+| Endpoint | Admin | Accountant | User |
+|----------|-------|------------|------|
+| `POST /auth/register` | ✅ | ✅ | ✅ |
+| `POST /auth/login` | ✅ | ✅ | ✅ |
+| `POST /auth/refresh` | ✅ | ✅ | ✅ |
+| `GET /users` | ✅ | ❌ | ❌ |
+| `POST /users` | ✅ | ❌ | ❌ |
+| `PUT /users/{id}` | ✅ | ❌ | ❌ |
+| `DELETE /users/{id}` | ✅ | ❌ | ❌ |
+| `GET /transactions` | ✅ (all) | ✅ (all) | ✅ (filtered) |
+| `POST /transactions` | ✅ | ✅ | ❌ |
+| `PUT /transactions/{id}` | ✅ | ✅ | ❌ |
+| `DELETE /transactions/{id}` | ✅ | ✅ | ❌ |
+| `GET /reports/summary` | ✅ | ✅ | ❌ |
+| `GET /reports/user/{id}` | ✅ (any) | ✅ (any) | ✅ (own only) |
+
+---
+
+## 🚨 Common Error Responses
+
+### 401 Unauthorized
+```json
+{
+  "detail": "Could not validate credentials"
+}
+```
+
+### 403 Forbidden  
+```json
+{
+  "detail": "Not enough permissions"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "detail": "User not found"
+}
+```
+
+### 422 Validation Error
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "field_name"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "detail": "Internal server error"
+}
+```
+
+---
+
+## 📝 Notes
+
+1. **Authentication:** All endpoints except register and login require a valid Bearer token
+2. **Pagination:** Use `skip` and `limit` query parameters for paginated endpoints
+3. **Date Format:** All dates are in ISO 8601 format (UTC)
+4. **IDs:** All IDs are MongoDB ObjectId format (24-character hex string)
+5. **Amounts:** All monetary amounts are stored as floating-point numbers
+6. **Roles:** Three roles available - "admin", "accountant", "user"

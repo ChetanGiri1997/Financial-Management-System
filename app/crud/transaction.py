@@ -30,13 +30,9 @@ async def get_transactions_for_user(
         # Admin and accountant can see all transactions
         cursor = database.transactions.find()
     else:
-        # Regular users can see their own deposits and all expenses
-        cursor = database.transactions.find({
-            "$or": [
-                {"user_id": user_id, "type": TransactionType.DEPOSIT},
-                {"type": TransactionType.EXPENSE}
-            ]
-        })
+        # Regular users can see ALL transactions for transparency (read-only)
+        # This gives users full visibility into deposits and expenses
+        cursor = database.transactions.find()
     
     cursor = cursor.sort("date", DESCENDING).skip(skip).limit(limit)
     
@@ -48,24 +44,40 @@ async def get_transactions_for_user(
     return transactions
 
 
-async def get_transaction_by_id(transaction_id: str) -> Optional[TransactionInDB]:
-    """Get transaction by ID."""
+async def get_transaction_by_id(
+    transaction_id: str, 
+    user_id: str = None, 
+    user_role: str = None
+) -> Optional[TransactionInDB]:
+    """Get transaction by ID with role-based access control."""
     if not ObjectId.is_valid(transaction_id):
         return None
     
     database = await get_database()
     doc = await database.transactions.find_one({"_id": ObjectId(transaction_id)})
-    if doc:
-        doc["_id"] = str(doc["_id"])
-        return TransactionInDB(**doc)
-    return None
+    
+    if not doc:
+        return None
+    
+    # If user role is provided, check access permissions
+    if user_role and user_role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+        # Regular users can view any transaction (transparency)
+        # but cannot modify - this check is for viewing only
+        pass
+    
+    doc["_id"] = str(doc["_id"])
+    return TransactionInDB(**doc)
 
 
 async def update_transaction(
     transaction_id: str, 
-    transaction_update: TransactionUpdate
+    transaction_update: TransactionUpdate,
+    user_role: str
 ) -> Optional[TransactionInDB]:
-    """Update a transaction."""
+    """Update a transaction - only admin and accountant can modify."""
+    if user_role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+        return None  # Unauthorized
+    
     if not ObjectId.is_valid(transaction_id):
         return None
     
@@ -81,8 +93,11 @@ async def update_transaction(
     return await get_transaction_by_id(transaction_id)
 
 
-async def delete_transaction(transaction_id: str) -> bool:
-    """Delete a transaction."""
+async def delete_transaction(transaction_id: str, user_role: str) -> bool:
+    """Delete a transaction - only admin and accountant can delete."""
+    if user_role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+        return False  # Unauthorized
+    
     if not ObjectId.is_valid(transaction_id):
         return False
     
@@ -91,9 +106,17 @@ async def delete_transaction(transaction_id: str) -> bool:
     return result.deleted_count > 0
 
 
-async def get_financial_summary() -> Dict[str, Any]:
+async def can_manage_transaction(user_role: str) -> bool:
+    """Check if user can create, update, or delete transactions."""
+    return user_role in [UserRole.ADMIN, UserRole.ACCOUNTANT]
+
+
+async def get_financial_summary(user_role: str = None) -> Dict[str, Any]:
     """Get financial summary with totals and monthly breakdown."""
     database = await get_database()
+    
+    # All users can view financial summary for transparency
+    # but this could be restricted if needed
     
     # Aggregate pipeline for summary
     pipeline = [
@@ -150,9 +173,12 @@ async def get_financial_summary() -> Dict[str, Any]:
     }
 
 
-async def get_user_deposits(user_id: str) -> Dict[str, Any]:
+async def get_user_deposits(user_id: str, requesting_user_role: str = None) -> Dict[str, Any]:
     """Get user-specific deposit report."""
     database = await get_database()
+    
+    # Admin and accountant can view any user's deposits
+    # Regular users can view all deposits for transparency
     
     pipeline = [
         {"$match": {"user_id": user_id, "type": "deposit"}},
