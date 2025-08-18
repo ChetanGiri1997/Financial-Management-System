@@ -342,7 +342,7 @@ Once the server is running, visit these URLs:
 
 ### **Authentication**
 
-```bash
+
 # Register a new user
 curl -X POST "http://localhost:8000/auth/register" \
   -H "Content-Type: application/json" \
@@ -365,11 +365,11 @@ curl -X POST "http://localhost:8000/auth/login" \
 # Get current user info
 curl -X GET "http://localhost:8000/auth/me" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
+
 
 ### **Transaction Management**
 
-```bash
+
 # Create a deposit (Accountant/Admin only)
 curl -X POST "http://localhost:8000/transactions" \
   -H "Content-Type: application/json" \
@@ -393,11 +393,11 @@ curl -X PUT "http://localhost:8000/transactions/TRANSACTION_ID" \
     "amount": 1600.00,
     "description": "Updated salary deposit"
   }'
-```
+
 
 ### **Financial Reports**
 
-```bash
+
 # Get financial summary (Accountant/Admin)
 curl -X GET "http://localhost:8000/reports/summary" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
@@ -405,7 +405,7 @@ curl -X GET "http://localhost:8000/reports/summary" \
 # Get user deposit report
 curl -X GET "http://localhost:8000/reports/user/USER_ID" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
+
 
 ---
 
@@ -413,7 +413,7 @@ curl -X GET "http://localhost:8000/reports/user/USER_ID" \
 
 ### **Docker Compose Setup**
 
-```yaml
+
 version: '3.8'
 
 services:
@@ -457,11 +457,11 @@ volumes:
 networks:
   financial_network:
     driver: bridge
-```
+
 
 ### **Deployment Commands**
 
-```bash
+
 # Development
 docker-compose up --build
 
@@ -476,7 +476,7 @@ docker-compose logs -f api
 
 # Stop services
 docker-compose down
-```
+
 
 ---
 
@@ -484,7 +484,7 @@ docker-compose down
 
 ### **Manual API Testing**
 
-```bash
+
 # Health check
 curl http://localhost:8000/health
 
@@ -497,11 +497,11 @@ TOKEN=$(curl -s -X POST "http://localhost:8000/auth/login" \
 # Use token for authenticated request  
 curl -X GET "http://localhost:8000/auth/me" \
   -H "Authorization: Bearer $TOKEN"
-```
+
 
 ### **Database Testing**
 
-```bash
+
 # Connect to MongoDB container
 docker exec -it financial_mongodb mongosh
 
@@ -516,7 +516,7 @@ db.users.find().pretty()
 
 # Query transactions
 db.transactions.find().limit(5).pretty()
-```
+
 
 ---
 
@@ -535,7 +535,7 @@ db.transactions.find().limit(5).pretty()
 
 ### **Scalability Considerations**
 
-```bash
+
 # Horizontal scaling with Docker
 docker-compose up --scale api=3
 
@@ -549,7 +549,7 @@ upstream financial_api {
 # Database optimization
 db.transactions.createIndex({ "date": 1, "type": 1 })  # Compound index
 db.users.createIndex({ "created_at": 1 })              # Time-based queries
-```
+
 
 ---
 
@@ -557,7 +557,7 @@ db.users.createIndex({ "created_at": 1 })              # Time-based queries
 
 ### **Environment Variables**
 
-```bash
+
 # Production .env example
 MONGODB_URL=mongodb://mongodb-cluster:27017/financial_management?replicaSet=rs0
 SECRET_KEY=super-secure-random-string-generated-for-production
@@ -566,7 +566,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
 CORS_ORIGINS=["https://your-frontend-domain.com","https://www.your-domain.com"]
 ENVIRONMENT=production
-```
+
 
 ### **Security Checklist**
 
@@ -581,7 +581,7 @@ ENVIRONMENT=production
 
 ### **Monitoring & Logging**
 
-```python
+
 # Add to main.py for production logging
 import logging
 from datetime import datetime
@@ -594,7 +594,7 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-```
+
 
 ---
 
@@ -604,7 +604,7 @@ We welcome contributions! Here's how to get started:
 
 ### **Development Setup**
 
-```bash
+
 # Fork the repository and clone your fork
 git clone https://github.com/YOUR_USERNAME/financial-backend.git
 cd financial-backend
@@ -623,7 +623,6 @@ python -m pytest tests/  # Run tests
 git add .
 git commit -m "feat: add your feature description"
 git push origin feature/your-feature-name
-```
 
 ### **Contribution Guidelines**
 
@@ -645,9 +644,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 | Resource | Link |
 |----------|------|
-| 🐛 **Bug Reports** | [GitHub Issues](https://github.com/your-repo/issues) |
-| 💡 **Feature Requests** | [GitHub Discussions](https://github.com/your-repo/discussions) |
-| 📧 **Email Support** | your-email@example.com |
+| 🐛 **Bug Reports** | [GitHub Issues](https://github.com/ChetanGiri1997/Financial-Management-System.git/issues) |
+| 💡 **Feature Requests** | [GitHub Discussions](https://github.com/ChetanGiri1997/Financial-Management-System.git/discussions) |
+| 📧 **Email Support** | info@chetangiri.com.np |
 | 📖 **Documentation** | [API Docs](http://localhost:8000/docs) |
 
 ---
