@@ -347,9 +347,9 @@ Once the server is running, visit these URLs:
 curl -X POST "http://localhost:8000/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Doe",
-    "username": "johndoe",
-    "email": "john@example.com",
+    "name": "Gopi Chandra",
+    "username": "gops",
+    "email": "gops@example.com",
     "password": "securepass123",
     "role": "user"
   }'
@@ -358,7 +358,7 @@ curl -X POST "http://localhost:8000/auth/register" \
 curl -X POST "http://localhost:8000/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "johndoe", 
+    "username": "gops", 
     "password": "securepass123"
   }'
 
@@ -666,6 +666,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **⭐ If this project helped you, please consider giving it a star! ⭐**
 
-Made with ❤️ by the Financial Management Team
+Made with ❤️ by the Chetan Giri
 
 </div>
